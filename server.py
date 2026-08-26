@@ -364,6 +364,19 @@ def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=
     factor_asistencia = max(0.01, 1.0 - merma)
     data_processed = []
 
+    roster_keys = list(roster_total_camp.keys())
+    def get_mapped_camp(c_data):
+        c_str = str(c_data).strip()
+        if c_str in roster_keys: return c_str
+        c_l = c_str.lower()
+        for k in roster_keys:
+            if str(k).lower() in c_l: return k
+        for brand in ['coppel', 'liverpool', 'suburbia', 'vial', 'hogar', 'ambulancia', 'retencion']:
+            if brand in c_l:
+                for k in roster_keys:
+                    if brand in str(k).lower(): return k
+        return c_str
+
     for d in range(dias_futuros):
         fecha_actual = fecha_inicio_forecast + timedelta(days=d)
         str_fecha = fecha_actual.strftime('%Y-%m-%d')
@@ -402,9 +415,10 @@ def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=
                 req_ftes = calcular_agentes_requeridos_erlang_c(a_erlang, aht, target_time, target_sl) if calls_float > 0 else 0
                 req_hc = math.ceil(req_ftes / factor_asistencia) if req_ftes > 0 else 0
                 
-                hc_roster = roster_coverage.get((str(camp), nombre_dia.capitalize(), inter), 0)
-                tot_camp = roster_total_camp.get(str(camp), 0)
-                tot_camp_dia = roster_total_dia_camp.get((str(camp), nombre_dia.capitalize()), 0)
+                mapped_camp = get_mapped_camp(camp)
+                hc_roster = roster_coverage.get((mapped_camp, nombre_dia.capitalize(), inter), 0)
+                tot_camp = roster_total_camp.get(mapped_camp, 0)
+                tot_camp_dia = roster_total_dia_camp.get((mapped_camp, nombre_dia.capitalize()), 0)
 
                 data_processed.append({
                     'Campaña': str(camp),
@@ -662,7 +676,7 @@ def resolver_turnos_optimos(intervalos, campanas_activas, llamadas_vec=None, aht
     
     tot_llamadas = float(np.sum(llamadas_arr))
     factor_asistencia = max(0.01, 1.0 - merma)
-    target_sl_dinamico = float(target_sl)
+    target_sl_dinamico = float(target_sl) 
     req_hc_pooled = req_hc_base.tolist()
     cob_hc = np.zeros(m, dtype=float)
     x_turnos_dict = {}
@@ -789,8 +803,18 @@ def api_optimize_schedules():
     try:
         body = request.get_json(force=True)
         turnos, cob_optima, total_diario, total_hc, eficiencia, sl_vec, sl_global, staff_level, req_hc_pooled = resolver_turnos_optimos(
-            body.get('intervalos', []), body.get('campanas', []), body.get('llamadas', []), body.get('ahts', []), body.get('requeridos', []),
-            float(body.get('target_sl', 80.0)), float(body.get('target_time', 20.0)), float(body.get('merma', 30.0)) / 100.0, float(body.get('duracion_jornada', 8.0)), bool(body.get('es_nocturno', False)), False, bool(body.get('es_chat', False)), float(body.get('concurrencia', 3.0))
+            body.get('intervalos', []), 
+            body.get('campanas', []), 
+            body.get('llamadas', []), 
+            body.get('ahts', []), 
+            body.get('requeridos', []),
+            float(body.get('target_sl', 80.0)), 
+            float(body.get('target_time', 20.0)), 
+            float(body.get('merma', 30.0)) / 100.0, 
+            float(body.get('duracion_jornada', 8.0)), 
+            bool(body.get('es_nocturno', False)), 
+            bool(body.get('es_chat', False)), 
+            float(body.get('concurrencia', 3.0))
         )
         return jsonify({
             'turnos': turnos, 'cobertura_optima': [int(x) for x in cob_optima], 'total_agentes_diarios': int(total_diario),
