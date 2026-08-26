@@ -95,6 +95,14 @@
             <div>
                 <div class="flex items-center gap-3">
                     <h1 class="text-2xl font-bold text-white tracking-tight">Workforce Capacity Forecast</h1>
+                    
+                    <div class="bg-[#1E293B] rounded-xl p-1 flex items-center shadow-inner border border-[#334155] ml-4">
+                        <button id="btnTabInbound" onclick="setModeWFM('inbound')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-primary text-white shadow-md">🎯 Inbound</button>
+                        <button id="btnTabChat" onclick="setModeWFM('chat')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">💬 Chat</button>
+                        <div class="w-px h-6 bg-[#334155] mx-1"></div>
+                        <button id="btnTabGeneral" onclick="setModeWFM('general')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200">🌐 Consolidado</button>
+                    </div>
+
                     <span id="tagModoOps" class="hidden text-[10px] bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider drop-shadow-md">Vista Operaciones</span>
                 </div>
                 <p class="text-xs text-slate-400 mt-1 font-medium tracking-wide">Capacity Planning & Scheduling Optimizer</p>
@@ -118,68 +126,84 @@
                 <span class="text-brand-accentCyan drop-shadow-sm">◀</span> Ocultar Parámetros
             </button>
 
-            <div class="flex items-center justify-between pb-4 border-b border-[#1F2937] relative z-10 mt-4">
-                <h2 class="text-xs font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
-                    <span class="text-slate-300">⚙️</span> KEY ASSUMPTIONS
-                </h2>
+            <div id="contParametrosSimulacion">
+                <div class="flex items-center justify-between pb-4 border-b border-[#1F2937] relative z-10 mt-4">
+                    <h2 class="text-xs font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
+                        <span class="text-slate-300">⚙️</span> KEY ASSUMPTIONS
+                    </h2>
+                </div>
+
+                <div class="space-y-4 pt-2 relative z-10">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col group" id="contTargetSl">
+                            <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentEmerald transition-colors">Target SL (%)</label>
+                            <input type="number" id="targetSl" value="80" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentEmerald font-mono-num font-bold focus:border-brand-accentEmerald focus:ring-1 focus:ring-brand-accentEmerald focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
+                        </div>
+                        <div class="flex flex-col group" id="contTargetTime">
+                            <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-white transition-colors">Target ASA (s)</label>
+                            <input type="number" id="targetTime" value="20" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-white font-mono-num font-bold focus:border-white focus:ring-1 focus:ring-white focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
+                        </div>
+                        
+                        <div class="flex flex-col group hidden col-span-2" id="contConcurrencia">
+                            <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentCyan transition-colors">Concurrencia (Chats por Agente)</label>
+                            <input type="number" id="concurrencia" value="4" step="0.5" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentCyan font-mono-num font-bold focus:border-brand-accentCyan focus:ring-1 focus:ring-brand-accentCyan focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col group">
+                            <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentRose transition-colors">Shrinkage (%)</label>
+                            <input type="number" id="merma" value="30" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentRose font-mono-num font-bold focus:border-brand-accentRose focus:ring-1 focus:ring-brand-accentRose focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
+                        </div>
+                        <div class="flex flex-col group">
+                            <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentAmber transition-colors">Jornada (Hrs)</label>
+                            <input type="number" id="duracionJornada" value="6" step="0.5" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentAmber font-mono-num font-bold focus:border-brand-accentAmber focus:ring-1 focus:ring-brand-accentAmber focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col group pt-1">
+                        <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-white transition-colors">Horizonte (Días)</label>
+                        <input type="number" id="dias" value="130" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-white font-mono-num font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none transition-all shadow-inner"/>
+                    </div>
+
+                    <div class="pt-6 space-y-6">
+                        <label class="flex items-center justify-between cursor-pointer group">
+                            <div class="flex items-center gap-3">
+                                <span class="text-brand-accentAmber text-lg drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]">🌙</span>
+                                <span class="text-[13px] text-white font-bold transition-colors tracking-wide">Turno Nocturno</span>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox" id="chkNocturno" onchange="debouncedActualizarGrafica()" class="sr-only peer" checked>
+                                <div class="w-[42px] h-[22px] bg-[#1E293B] border border-[#334155] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[16px] after:w-[16px] after:transition-all peer-checked:bg-[#A78BFA] peer-checked:border-brand-accentViolet peer-checked:shadow-[0_0_10px_rgba(167,139,250,0.5)]"></div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-center justify-between cursor-pointer group">
+                            <div class="flex items-center gap-3">
+                                <span class="text-brand-accentRose text-lg drop-shadow-[0_0_5px_rgba(251,113,133,0.5)]">🔥</span>
+                                <span class="text-[13px] text-white font-bold transition-colors tracking-wide">Staffing x Picos</span>
+                            </div>
+                            <div class="relative">
+                                <input type="checkbox" id="chkPicos" onchange="debouncedActualizarGrafica()" class="sr-only peer" checked>
+                                <div class="w-[42px] h-[22px] bg-[#1E293B] border border-[#334155] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[16px] after:w-[16px] after:transition-all peer-checked:bg-[#FB7185] peer-checked:border-brand-accentRose peer-checked:shadow-[0_0_10px_rgba(251,113,133,0.5)]"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="btnProcesar" onclick="procesarWFM()" class="w-full bg-gradient-to-r from-[#3B82F6] to-[#22D3EE] hover:from-[#2563EB] hover:to-[#06B6D4] text-white font-extrabold py-4 px-4 rounded-[14px] text-[13px] transition-all shadow-[0_4px_15px_-3px_rgba(34,211,238,0.4)] hover:shadow-[0_8px_25px_-5px_rgba(34,211,238,0.6)] uppercase tracking-wider mt-8 relative z-10">
+                    ▶ RUN PLAN
+                </button>
             </div>
 
-            <div class="space-y-4 pt-2 relative z-10">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="flex flex-col group">
-                        <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentEmerald transition-colors">Target SL (%)</label>
-                        <input type="number" id="targetSl" value="80" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentEmerald font-mono-num font-bold focus:border-brand-accentEmerald focus:ring-1 focus:ring-brand-accentEmerald focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
-                    </div>
-                    <div class="flex flex-col group">
-                        <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-white transition-colors">Target ASA (s)</label>
-                        <input type="number" id="targetTime" value="20" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-white font-mono-num font-bold focus:border-white focus:ring-1 focus:ring-white focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="flex flex-col group">
-                        <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentRose transition-colors">Shrinkage (%)</label>
-                        <input type="number" id="merma" value="30" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentRose font-mono-num font-bold focus:border-brand-accentRose focus:ring-1 focus:ring-brand-accentRose focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
-                    </div>
-                    <div class="flex flex-col group">
-                        <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-brand-accentAmber transition-colors">Jornada (Hrs)</label>
-                        <input type="number" id="duracionJornada" value="6.5" step="0.5" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-brand-accentAmber font-mono-num font-bold focus:border-brand-accentAmber focus:ring-1 focus:ring-brand-accentAmber focus:outline-none transition-all shadow-inner" onchange="debouncedActualizarGrafica()"/>
-                    </div>
-                </div>
-
-                <div class="flex flex-col group pt-1">
-                    <label class="text-[11px] text-slate-400 font-medium mb-2 group-focus-within:text-white transition-colors">Horizonte (Días)</label>
-                    <input type="number" id="dias" value="130" class="bg-[#0B1121] border border-[#1F2937] p-3 rounded-xl text-sm text-white font-mono-num font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none transition-all shadow-inner"/>
-                </div>
-
-                <div class="pt-6 space-y-6">
-                    <label class="flex items-center justify-between cursor-pointer group">
-                        <div class="flex items-center gap-3">
-                            <span class="text-brand-accentAmber text-lg drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]">🌙</span>
-                            <span class="text-[13px] text-white font-bold transition-colors tracking-wide">Turno Nocturno</span>
-                        </div>
-                        <div class="relative">
-                            <input type="checkbox" id="chkNocturno" onchange="debouncedActualizarGrafica()" class="sr-only peer" checked>
-                            <div class="w-[42px] h-[22px] bg-[#1E293B] border border-[#334155] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[16px] after:w-[16px] after:transition-all peer-checked:bg-[#A78BFA] peer-checked:border-brand-accentViolet peer-checked:shadow-[0_0_10px_rgba(167,139,250,0.5)]"></div>
-                        </div>
-                    </label>
-                    
-                    <label class="flex items-center justify-between cursor-pointer group">
-                        <div class="flex items-center gap-3">
-                            <span class="text-brand-accentRose text-lg drop-shadow-[0_0_5px_rgba(251,113,133,0.5)]">🔥</span>
-                            <span class="text-[13px] text-white font-bold transition-colors tracking-wide">Staffing x Picos</span>
-                        </div>
-                        <div class="relative">
-                            <input type="checkbox" id="chkPicos" onchange="debouncedActualizarGrafica()" class="sr-only peer" checked>
-                            <div class="w-[42px] h-[22px] bg-[#1E293B] border border-[#334155] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[16px] after:w-[16px] after:transition-all peer-checked:bg-[#FB7185] peer-checked:border-brand-accentRose peer-checked:shadow-[0_0_10px_rgba(251,113,133,0.5)]"></div>
-                        </div>
-                    </label>
+            <!-- Panel para cuando está en Vista General -->
+            <div id="contInfoGeneral" class="hidden pt-6">
+                <div class="p-4 bg-brand-primary/10 border border-brand-primary/30 rounded-xl">
+                    <p class="text-[11px] text-brand-primary font-bold uppercase tracking-widest mb-2">Vista Consolidada Activa</p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed">Estás visualizando los datos combinados de <span class="font-bold text-white">Inbound y Chat</span>.<br><br>Para garantizar una suma pura y exacta, el sistema procesa matemáticamente el requerimiento base de cada canal y consolida los totales.</p>
                 </div>
             </div>
 
-            <button id="btnProcesar" onclick="procesarWFM()" class="w-full bg-gradient-to-r from-[#3B82F6] to-[#22D3EE] hover:from-[#2563EB] hover:to-[#06B6D4] text-white font-extrabold py-4 px-4 rounded-[14px] text-[13px] transition-all shadow-[0_4px_15px_-3px_rgba(34,211,238,0.4)] hover:shadow-[0_8px_25px_-5px_rgba(34,211,238,0.6)] uppercase tracking-wider mt-8 relative z-10">
-                ▶ RUN PLAN
-            </button>
         </aside>
 
         <!-- DASHBOARD PRINCIPAL -->
@@ -259,10 +283,10 @@
             </div>
 
             <!-- 4 CARDS PRINCIPALES -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="kpiCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 <!-- CARD 1: TOTAL DEMAND -->
-                <div class="glass-panel glass-panel-hover p-5 rounded-xl relative overflow-hidden flex flex-col justify-between">
+                <div id="cardKpiCalls" class="glass-panel glass-panel-hover p-5 rounded-xl relative overflow-hidden flex flex-col justify-between">
                     <div class="flex justify-between items-start">
                         <p id="kpiCallsTitle" class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Demanda Total</p>
                         <div class="p-1.5 bg-slate-800/40 rounded-lg text-slate-300 border border-slate-700/50 shadow-inner flex items-center justify-center" style="width: 32px; height: 32px;">
@@ -273,7 +297,7 @@
                 </div>
 
                 <!-- CARD 2: AVG HANDLE TIME -->
-                <div class="glass-panel glass-panel-hover p-5 rounded-xl relative overflow-hidden border-t-2 border-t-brand-accentCyan shadow-[0_4px_15px_-5px_rgba(34,211,238,0.15)] flex flex-col justify-between">
+                <div id="cardKpiAht" class="glass-panel glass-panel-hover p-5 rounded-xl relative overflow-hidden border-t-2 border-t-brand-accentCyan shadow-[0_4px_15px_-5px_rgba(34,211,238,0.15)] flex flex-col justify-between">
                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-brand-accentCyan/10 rounded-full blur-xl pointer-events-none"></div>
                     <div class="flex justify-between items-start relative z-10">
                         <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">AHT Promedio</p>
@@ -319,7 +343,7 @@
             </div>
 
             <!-- MÓDULO 2: OPTIMIZACIÓN DE HORARIOS -->
-            <div id="modOptimizacion" class="glass-panel p-6 rounded-2xl relative transition-all duration-300">
+            <div id="modOptimizacion" class="glass-panel p-6 rounded-2xl relative transition-all duration-300 hidden">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <div>
                         <h3 id="optModuleTitle" class="text-[15px] font-extrabold text-white flex items-center gap-2 tracking-wide">
@@ -335,7 +359,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-[#0F172A] p-4 rounded-xl border border-[#1F2937] shadow-inner relative overflow-hidden group">
                         <div class="absolute inset-0 bg-brand-accentEmerald/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Projected SL (Con Malla)</p>
+                        <p id="lblProjectedSl" class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Projected SL (Con Malla)</p>
                         <div class="my-1">
                             <span id="compSlOptimo" class="text-3xl font-black font-mono-num text-brand-accentEmerald drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] block">--%</span>
                         </div>
@@ -378,7 +402,7 @@
                 </div>
             </div>
 
-            <!-- MÓDULO 3: MATRIZ GAP -->
+            <!-- MÓDULO 3: MATRIZ GAP Y GRAFICA GENERAL -->
             <div class="glass-panel p-6 rounded-2xl border-t-2 border-t-brand-accentAmber shadow-[0_4px_15px_-5px_rgba(251,191,36,0.15)] relative overflow-hidden">
                 <div class="flex justify-between items-center mb-6 relative z-10">
                     <h3 class="text-[15px] font-extrabold text-white flex items-center gap-2 tracking-wide">
@@ -389,20 +413,26 @@
                     </button>
                 </div>
                 
-                <div class="h-64 mb-6 relative bg-[#0F172A] p-2 rounded-xl border border-[#1F2937] shadow-inner">
+                <!-- GRAFICA DE INTERVALOS (INBOUND/CHAT) -->
+                <div class="h-64 mb-6 relative bg-[#0F172A] p-2 rounded-xl border border-[#1F2937] shadow-inner" id="contGapChart">
                     <canvas id="gapChart"></canvas>
+                </div>
+
+                <!-- GRAFICA GENERAL DE CANALES (SOLO VISTA CONSOLIDADA) -->
+                <div class="h-64 mb-6 relative bg-[#0F172A] p-4 rounded-xl border border-[#1F2937] shadow-inner hidden" id="contGeneralChart">
+                    <canvas id="generalChart"></canvas>
                 </div>
 
                 <div class="overflow-x-auto max-h-80 border border-[#1F2937] rounded-xl bg-[#0F172A] shadow-inner">
                     <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-[#111827] text-slate-400 font-bold text-[10px] uppercase tracking-wider sticky top-0 border-b border-[#334155] z-10 shadow-sm">
-                            <tr>
+                        <thead class="bg-[#111827] text-slate-400 font-bold text-[10px] uppercase tracking-wider sticky top-0 border-b border-[#334155] z-10 shadow-sm" id="tableHeaderContainer">
+                            <tr id="tableHeaderRow">
                                 <th class="py-3.5 px-4">Intervalo</th>
-                                <th class="py-3.5 px-4">Llamadas (FCST)</th>
+                                <th class="py-3.5 px-4" id="colHeaderCalls">Llamadas (FCST)</th>
                                 <th class="py-3.5 px-4">AHT (HH:MM:SS)</th>
                                 <th class="py-3.5 px-4 text-brand-primary">Req. (HC)</th>
                                 <th class="py-3.5 px-4 text-brand-accentEmerald">Avail. (HC)</th>
-                                <th class="py-3.5 px-4 text-brand-accentAmber">Capacidad SLA</th>
+                                <th class="py-3.5 px-4 text-brand-accentAmber" id="colHeaderCapacity">Capacidad SLA</th>
                                 <th class="py-3.5 px-4 text-center">Gap</th>
                             </tr>
                         </thead>
@@ -420,6 +450,7 @@
         let globalData = [];
         let optChartInstance = null;
         let gapChartInstance = null; 
+        let generalChartInstance = null;
         let globalTurnosOptimos = [];
         
         let allMesesOptions = [];
@@ -437,6 +468,7 @@
         let debounceTimer;
         let totalesFiltros = { M: 0, S: 0, C: 0, F: 0, I: 0 }; 
         let currentMode = 'wfm';
+        let forecastMode = 'inbound'; // MODOS: inbound, chat, general
         let isSidebarVisible = true; 
 
         const mesesMap = {
@@ -480,6 +512,128 @@
             return `W${formatDt(startOfWeek)} - ${formatDt(endOfWeek)}`;
         }
 
+        function setModeWFM(mode) {
+            if (forecastMode === mode) return; 
+
+            forecastMode = mode;
+            
+            const btnIn = document.getElementById('btnTabInbound');
+            const btnChat = document.getElementById('btnTabChat');
+            const btnGen = document.getElementById('btnTabGeneral');
+
+            const inactiveClass = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-slate-200";
+            btnIn.className = inactiveClass;
+            btnChat.className = inactiveClass;
+            btnGen.className = inactiveClass;
+
+            const modOptimizacion = document.getElementById('modOptimizacion');
+            const contParametros = document.getElementById('contParametrosSimulacion');
+            const contInfoGen = document.getElementById('contInfoGeneral');
+            
+            const cardCalls = document.getElementById('cardKpiCalls');
+            const cardAht = document.getElementById('cardKpiAht');
+            const kpiContainer = document.getElementById('kpiCardsContainer');
+
+            if(mode === 'general') {
+                btnGen.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-[#070B14] shadow-md";
+                
+                contParametros.style.display = 'none';
+                contInfoGen.style.display = 'block';
+                
+                cardCalls.classList.add('hidden');
+                cardAht.classList.add('hidden');
+                kpiContainer.classList.remove('lg:grid-cols-4');
+                kpiContainer.classList.add('lg:grid-cols-2');
+
+            } else {
+                contParametros.style.display = 'block';
+                contInfoGen.style.display = 'none';
+                
+                cardCalls.classList.remove('hidden');
+                cardAht.classList.remove('hidden');
+                kpiContainer.classList.remove('lg:grid-cols-2');
+                kpiContainer.classList.add('lg:grid-cols-4');
+
+                if(mode === 'inbound') {
+                    btnIn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-primary text-white shadow-md";
+                    document.getElementById('contTargetSl').style.display = 'block';
+                    document.getElementById('contTargetTime').style.display = 'block';
+                    document.getElementById('contConcurrencia').classList.add('hidden');
+                    document.getElementById('lblProjectedSl').innerText = "Projected SL (Con Malla)";
+                    document.getElementById('kpiCallsTitle').innerText = "Demanda Total";
+                } else if (mode === 'chat') {
+                    btnChat.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-accentCyan text-[#0B1121] shadow-md";
+                    document.getElementById('contTargetSl').style.display = 'block';
+                    document.getElementById('contTargetTime').style.display = 'block';
+                    document.getElementById('contConcurrencia').classList.remove('hidden');
+                    document.getElementById('lblProjectedSl').innerText = "Projected SL (Con Malla)";
+                    document.getElementById('kpiCallsTitle').innerText = "Mensajes / Chats Totales";
+                }
+            }
+
+            if (currentMode === 'ops' || currentMode === 'operaciones') {
+                if (modOptimizacion) modOptimizacion.classList.add('hidden');
+            } else {
+                if (mode === 'general') {
+                    if (modOptimizacion) modOptimizacion.classList.add('hidden');
+                } else {
+                    if (modOptimizacion) modOptimizacion.classList.remove('hidden');
+                }
+            }
+            
+            fetchLatestData(mode);
+        }
+
+        async function fetchLatestData(mode) {
+            try {
+                if (mode === 'general') {
+                    const [inRes, chatRes] = await Promise.all([
+                        fetch('/api/latest?mode=inbound&t=' + new Date().getTime()),
+                        fetch('/api/latest?mode=chat&t=' + new Date().getTime())
+                    ]);
+                    const inData = inRes.ok ? await inRes.json() : [];
+                    const chatData = chatRes.ok ? await chatRes.json() : [];
+                    
+                    const inDataTagged = inData.map(d => ({...d, Canal: 'Inbound'}));
+                    const chatDataTagged = chatData.map(d => ({...d, Canal: 'Chat'}));
+                    
+                    globalData = [...inDataTagged, ...chatDataTagged];
+                    
+                    if (globalData.length > 0) {
+                        inicializarFiltrosMultiples();
+                        debouncedActualizarGrafica();
+                    } else {
+                        limpiarPantalla(mode);
+                    }
+                } else {
+                    const response = await fetch('/api/latest?mode=' + mode + '&t=' + new Date().getTime());
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            const canalName = mode === 'inbound' ? 'Inbound' : 'Chat';
+                            globalData = data.map(d => ({...d, Canal: canalName}));
+                            inicializarFiltrosMultiples();
+                            debouncedActualizarGrafica();
+                        } else {
+                            limpiarPantalla(mode);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log("Error cargando pronóstico automático.");
+            }
+        }
+
+        function limpiarPantalla(mode) {
+            document.getElementById('kpiCalls').innerText = "0";
+            document.getElementById('kpiAht').innerText = "00:00:00";
+            document.getElementById('kpiHcRequerido').innerText = "0 HC";
+            document.getElementById('kpiHcRoster').innerText = "0 HC";
+            document.getElementById('intervalTableBody').innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500 font-medium font-sans">Presiona RUN PLAN para generar la proyección por primera vez.</td></tr>`;
+            if(optChartInstance) optChartInstance.destroy();
+            if(gapChartInstance) gapChartInstance.destroy();
+        }
+
         function toggleSidebar() {
             const aside = document.getElementById('panelControl');
             const main = document.getElementById('dashboardMain');
@@ -508,6 +662,7 @@
             setTimeout(() => { 
                 if (optChartInstance) optChartInstance.resize(); 
                 if (gapChartInstance) gapChartInstance.resize(); 
+                if (generalChartInstance) generalChartInstance.resize();
             }, 150);
         }
 
@@ -561,7 +716,7 @@
 
             if (mode === 'ops' || mode === 'operaciones') {
                 if (aside) aside.style.display = 'none';
-                if (modOpt) modOpt.style.display = 'none';
+                if (modOpt) modOpt.classList.add('hidden');
                 if (containerShow) containerShow.classList.add('hidden'); 
                 
                 if (main) {
@@ -572,7 +727,7 @@
                 
                 setTimeout(() => { if (gapChartInstance) gapChartInstance.resize(); }, 100);
             } else {
-                if (modOpt) modOpt.style.display = 'block';
+                if (modOpt && forecastMode !== 'general') modOpt.classList.remove('hidden');
                 if (tag) tag.classList.add('hidden');
                 
                 if (isSidebarVisible) {
@@ -594,6 +749,7 @@
                 setTimeout(() => { 
                     if (optChartInstance) optChartInstance.resize(); 
                     if (gapChartInstance) gapChartInstance.resize(); 
+                    if (generalChartInstance) generalChartInstance.resize();
                 }, 100);
             }
         }
@@ -616,6 +772,30 @@
 
         function maxCallsForAgents(agentsNetos, aht, targetTime, targetSl) {
             if (agentsNetos <= 0 || aht <= 0) return 0;
+            
+            if (forecastMode === 'general') {
+                return Math.floor(agentsNetos * (1800 / aht));
+            } else if (forecastMode === 'chat') {
+                const concurrencia = parseFloat(document.getElementById('concurrencia').value) || 3.0;
+                let low = 0;
+                let high = agentsNetos * (1800 / aht) * concurrencia * 5; 
+                let maxCalls = 0;
+                
+                for (let i=0; i<20; i++) { 
+                    let mid = (low + high) / 2;
+                    let a_erl_raw = (mid * aht) / 1800;
+                    let a_erl_adj = a_erl_raw / Math.max(1.0, concurrencia);
+                    let sl = erlang_c_sl_optimizado(a_erl_adj, agentsNetos, aht, targetTime);
+                    if (sl >= targetSl) {
+                        maxCalls = mid;
+                        low = mid; 
+                    } else {
+                        high = mid; 
+                    }
+                }
+                return Math.floor(maxCalls);
+            }
+
             let low = 0;
             let high = agentsNetos * (1800 / aht); 
             let maxCalls = 0;
@@ -650,18 +830,7 @@
                 await fetchWFMConfig();
             }
 
-            try {
-                const response = await fetch('/api/latest?t=' + new Date().getTime());
-                if (response.ok) {
-                    globalData = await response.json();
-                    if (Array.isArray(globalData) && globalData.length > 0) {
-                        inicializarFiltrosMultiples();
-                        debouncedActualizarGrafica();
-                    }
-                }
-            } catch (e) {
-                console.log("Error cargando pronóstico automático.");
-            }
+            fetchLatestData(forecastMode);
         });
 
         function getProp(row, keys, def = '') {
@@ -695,13 +864,22 @@
             
             const formData = new FormData();
             
-            formData.append('target_sl', document.getElementById('targetSl').value);
-            formData.append('target_time', document.getElementById('targetTime').value);
+            if (forecastMode === 'inbound' || forecastMode === 'chat') {
+                formData.append('target_sl', document.getElementById('targetSl').value);
+                formData.append('target_time', document.getElementById('targetTime').value);
+            }
+            if (forecastMode === 'chat') {
+                formData.append('concurrencia', document.getElementById('concurrencia').value);
+            }
+            
             formData.append('merma', document.getElementById('merma').value);
             formData.append('dias', document.getElementById('dias') ? document.getElementById('dias').value : 45);
             
+            let url = '/api/process';
+            if (forecastMode === 'chat') url = '/api/process_chat';
+
             try {
-                const response = await fetch('/api/process', { method: 'POST', body: formData });
+                const response = await fetch(url, { method: 'POST', body: formData });
                 
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") === -1) {
@@ -715,7 +893,7 @@
                     inicializarFiltrosMultiples();
                     debouncedActualizarGrafica();
                 } else {
-                    alert("Error: " + (globalData.error || "Asegúrate de que 'historico.xlsx' esté cargado en tu servidor."));
+                    alert("Error: " + (globalData.error || "Asegúrate de que 'historico.xlsx' esté cargado y tenga la pestaña correcta."));
                 }
             } catch (e) {
                 alert("Error de conexión: " + e.message);
@@ -990,22 +1168,218 @@
                 return;
             }
 
-            const totCalls = dfFiltered.reduce((acc, row) => acc + (Number(getProp(row, ['Llamadas', 'Recibidas'], 0)) || 0), 0);
+            const fechasFiltradas = [...new Set(dfFiltered.map(r => String(getProp(r, ['Fecha'], '')).split(' ')[0].split('T')[0]))].filter(Boolean);
+            const todosIntervalos = [...new Set(dfFiltered.map(r => String(getProp(r, ['Intervalo'], '00:00'))))].sort();
+            const esVistaSemanal = fechasFiltradas.length > 1;
+
+            // =======================================================
+            // 🛑 LÓGICA VISTA CONSOLIDADA (PURA Y RAPIDA O(N))
+            // =======================================================
+            if (forecastMode === 'general') {
+                const btn = document.getElementById('btnProcesar');
+                if(btn) { btn.disabled = true; btn.innerText = "⏳ SUMANDO CANALES..."; }
+
+                const concurrenciaVal = parseFloat(document.getElementById('concurrencia').value) || 3.0;
+
+                const getCanalData = async (canalStr, esOutbound, esChat) => {
+                    const dfC = dfFiltered.filter(r => r.Canal === canalStr);
+                    if (dfC.length === 0) return { req: 0, disp: 0 };
+
+                    const fechasC = [...new Set(dfC.map(r => String(getProp(r, ['Fecha'], '')).split(' ')[0].split('T')[0]))].filter(Boolean);
+                    const nDias = fechasC.length;
+                    if(nDias === 0) return { req: 0, disp: 0 };
+
+                    const mapIntFech = {};
+                    dfC.forEach(r => {
+                        const fStr = String(getProp(r, ['Fecha'], '')).split(' ')[0].split('T')[0];
+                        const iStr = String(getProp(r, ['Intervalo'], '00:00'));
+                        const key = `${fStr}_${iStr}`;
+                        if (!mapIntFech[key]) mapIntFech[key] = [];
+                        mapIntFech[key].push(r);
+                    });
+
+                    const llamVector = [];
+                    const ahtVector = [];
+                    const reqVector = [];
+
+                    todosIntervalos.forEach(inter => {
+                        let callSum = 0, reqSum = 0, htSum = 0;
+                        let cArr = [], rArr = [], aArr = [];
+
+                        fechasC.forEach(fStr => {
+                            const subRows = mapIntFech[`${fStr}_${inter}`] || [];
+                            let sC = 0, sR = 0, sHt = 0;
+                            subRows.forEach(b => {
+                                const c = Number(getProp(b, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0;
+                                const r = Number(getProp(b, ['Agentes_Requeridos'], 0)) || 0;
+                                const ht = Number(getProp(b, ['AHT_Segundos'], 180)) || 180;
+                                sC += c; sR += r; sHt += (c * ht);
+                            });
+                            callSum += sC; reqSum += sR; htSum += sHt;
+                            cArr.push(sC); rArr.push(sR); aArr.push(sC > 0 ? sHt/sC : 180);
+                        });
+
+                        if (usarPicos) {
+                            llamVector.push(cArr.length ? Math.max(...cArr) : 0);
+                            reqVector.push(rArr.length ? Math.max(...rArr) : 0);
+                            ahtVector.push(aArr.length ? Math.max(...aArr) : 180);
+                        } else {
+                            llamVector.push(callSum / nDias);
+                            reqVector.push(reqSum / nDias);
+                            ahtVector.push(callSum > 0 ? htSum / callSum : 180);
+                        }
+                    });
+
+                    let hcReq = 0;
+                    try {
+                        const res = await fetch('/api/optimize-schedules', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                intervalos: todosIntervalos,
+                                campanas: [], 
+                                llamadas: llamVector,
+                                ahts: ahtVector,
+                                requeridos: reqVector, 
+                                target_sl: targetSlObj,
+                                target_time: targetTimeObj,
+                                merma: mermaVal,
+                                duracion_jornada: durJornada,
+                                es_nocturno: usarNocturno,
+                                es_outbound: esOutbound,
+                                es_chat: esChat,
+                                concurrencia: concurrenciaVal
+                            })
+                        });
+                        
+                        if (res.ok) {
+                            const data = await res.json();
+                            hcReq = esVistaSemanal ? (data.headcount_semanal_6x1 || 0) : (data.total_agentes_diarios || 0);
+                        }
+                    } catch (err) {
+                        console.error("Error optimizando canal: ", canalStr, err);
+                    }
+
+                    const uniqueCampChannel = [...new Set(dfC.map(r => r.Campaña + '|' + (r.Canal || '')))];
+                    let hcDisp = 0;
+                    uniqueCampChannel.forEach(cc => {
+                        const row = dfC.find(r => (r.Campaña + '|' + (r.Canal || '')) === cc);
+                        if (row) {
+                            hcDisp += esVistaSemanal ? (row.Total_Roster_Campana || 0) : (row.Total_Roster_Dia || 0);
+                        }
+                    });
+
+                    return { req: hcReq, disp: hcDisp };
+                };
+
+                Promise.all([
+                    getCanalData('Inbound', false, false),
+                    getCanalData('Chat', false, true)
+                ]).then(results => {
+                    if(btn) { btn.disabled = false; btn.innerText = "▶ RUN PLAN"; }
+
+                    const hcReqInbound = results[0] ? results[0].req : 0;
+                    const hcDispInbound = results[0] ? results[0].disp : 0;
+                    
+                    const hcReqChat = results[1] ? results[1].req : 0;
+                    const hcDispChat = results[1] ? results[1].disp : 0;
+
+                    const totalReqGlobal = hcReqInbound + hcReqChat;
+                    const totalDispGlobal = hcDispInbound + hcDispChat;
+
+                    document.getElementById('kpiHcRequeridoTitle').innerText = "HC Requerido (Consolidado)";
+                    document.getElementById('kpiHcRequerido').innerText = totalReqGlobal.toLocaleString() + ' HC';
+                    document.getElementById('kpiHcRosterTitle').innerText = esVistaSemanal ? "HC Disponible" : "Plantilla de Hoy";
+                    document.getElementById('kpiHcRoster').innerText = totalDispGlobal.toLocaleString() + ' HC';
+
+                    const gapTotal = totalDispGlobal - totalReqGlobal;
+                    const gapEl = document.getElementById('kpiHcGap');
+                    if (gapTotal > 0) {
+                        gapEl.innerText = `+${gapTotal} Sobran`;
+                        gapEl.className = 'text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#34D399]/20 text-[#34D399] font-mono-num border border-[#34D399]/30';
+                    } else if (gapTotal < 0) {
+                        gapEl.innerText = `${gapTotal} Faltan`;
+                        gapEl.className = 'text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#FB7185]/20 text-[#FB7185] font-mono-num border border-[#FB7185]/30';
+                    } else {
+                        gapEl.innerText = `✓ Balanceado`;
+                        gapEl.className = 'text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#1E293B] text-slate-300 font-mono-num border border-[#334155]';
+                    }
+
+                    document.getElementById('tableHeaderRow').innerHTML = `
+                        <th class="py-3.5 px-4 text-left">Canal Operativo</th>
+                        <th class="py-3.5 px-4 text-brand-primary">HC Requerido</th>
+                        <th class="py-3.5 px-4 text-brand-accentEmerald">HC Disponible</th>
+                        <th class="py-3.5 px-4 text-center">Delta (Gap)</th>
+                    `;
+
+                    const tbody = document.getElementById('intervalTableBody');
+                    tbody.innerHTML = '';
+                    
+                    const tableRows = [
+                        { name: '🎯 Inbound', req: hcReqInbound, disp: hcDispInbound },
+                        { name: '💬 Chat', req: hcReqChat, disp: hcDispChat },
+                        { name: '🌐 TOTAL', req: totalReqGlobal, disp: totalDispGlobal }
+                    ];
+
+                    tableRows.forEach(ch => {
+                        const gap = ch.disp - ch.req;
+                        let gapHtml = '';
+                        if (gap > 0) gapHtml = `<span class="bg-[#34D399]/20 text-[#34D399] px-2 py-0.5 rounded-md font-bold">+${gap}</span>`;
+                        else if (gap < 0) gapHtml = `<span class="bg-[#FB7185]/20 text-[#FB7185] px-2 py-0.5 rounded-md font-bold">${gap}</span>`;
+                        else gapHtml = `<span class="text-slate-500 font-bold">0</span>`;
+
+                        let rowClass = "hover:bg-[#1E293B] transition-colors";
+                        if (ch.name === '🌐 TOTAL') rowClass = "bg-[#1E293B] font-bold border-t border-[#334155]";
+
+                        tbody.innerHTML += `
+                            <tr class="${rowClass}">
+                                <td class="py-3.5 px-4 font-bold text-white text-left">${ch.name}</td>
+                                <td class="py-3.5 px-4 text-brand-primary font-black text-sm">${ch.req.toLocaleString()}</td>
+                                <td class="py-3.5 px-4 text-brand-accentEmerald font-black text-sm">${ch.disp.toLocaleString()}</td>
+                                <td class="py-3.5 px-4 text-center">${gapHtml}</td>
+                            </tr>
+                        `;
+                    });
+
+                    document.getElementById('contGapChart').classList.add('hidden');
+                    document.getElementById('contGeneralChart').classList.remove('hidden');
+
+                    if(generalChartInstance) generalChartInstance.destroy();
+                    const ctxGen = document.getElementById('generalChart').getContext('2d');
+                    generalChartInstance = new Chart(ctxGen, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Inbound', 'Chat'],
+                            datasets: [
+                                { label: 'HC Requerido', data: [hcReqInbound, hcReqChat], backgroundColor: '#A78BFA', borderRadius: 4 },
+                                { label: 'HC Disponible', data: [hcDispInbound, hcDispChat], backgroundColor: '#34D399', borderRadius: 4 }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 11, weight: 600 } } } },
+                            scales: { x: { grid: { display: false }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 11, weight: 'bold' } } }, y: { grid: { color: '#1F2937', borderDash: [4, 4] }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono' } }, beginAtZero: true } }
+                        }
+                    });
+                });
+
+                return; 
+            }
+
+            // =======================================================
+            // 🛑 LÓGICA VISTAS INDIVIDUALES (Erlang-C / Optimizador)
+            // =======================================================
+            const totCalls = dfFiltered.reduce((acc, row) => acc + (Number(getProp(row, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0), 0);
             document.getElementById('kpiCalls').innerText = totCalls.toLocaleString();
-            document.getElementById('kpiCallsTitle').innerText = "Demanda Total";
             
             const sumLlamadasAht = dfFiltered.reduce((acc, row) => {
-                const calls = Number(getProp(row, ['Llamadas', 'Recibidas'], 0)) || 0;
+                const calls = Number(getProp(row, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0;
                 let ahtSegs = Number(getProp(row, ['AHT_Segundos'], 180));
                 return acc + (calls * ahtSegs);
             }, 0);
 
             const avgAhtSegs = totCalls > 0 ? Math.round(sumLlamadasAht / totCalls) : 0;
-
-            const fechasFiltradas = [...new Set(dfFiltered.map(r => String(getProp(r, ['Fecha'], '')).split(' ')[0].split('T')[0]))].filter(Boolean);
-            const todosIntervalos = [...new Set(dfFiltered.map(r => String(getProp(r, ['Intervalo'], '00:00'))))].sort();
-            
-            const esVistaSemanal = fechasFiltradas.length > 1;
+            document.getElementById('kpiAht').innerText = formatAHT(avgAhtSegs);
 
             const llamadasAvgVector = todosIntervalos.map(() => 0);
             const ahtAvgVector = todosIntervalos.map(() => 0);
@@ -1021,10 +1395,7 @@
                 mapIntervaloFecha[key].push(r);
             });
 
-            // === FIX DEFINITIVO: PROMEDIO POR DÍA DE LA SEMANA REAL ===
-            // Aquí el sistema calculará exactamente cuánto requerimos en una semana representativa del periodo filtrado.
             const numDiasPeriodo = fechasFiltradas.length;
-            const divisorDias = Math.max(1, numDiasPeriodo / 7);
 
             todosIntervalos.forEach((inter, idx) => {
                 let callsSum = 0;
@@ -1036,7 +1407,7 @@
                     const subRows = mapIntervaloFecha[`${fStr}_${inter}`] || [];
                     if (subRows.length > 0) {
                         subRows.forEach(b => {
-                            const c = Number(getProp(b, ['Llamadas', 'Recibidas'], 0)) || 0;
+                            const c = Number(getProp(b, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0;
                             const r = Number(getProp(b, ['Agentes_Requeridos'], 0)) || 0;
                             const ht = Number(getProp(b, ['AHT_Segundos'], 180)) || 180;
                             const ros = Number(getProp(b, ['HC_Actual_Roster'], 0)) || 0;
@@ -1053,15 +1424,14 @@
                     rosterAvgVector[idx] = Math.round(rosterSum / numDiasPeriodo);
 
                     if (usarPicos) {
-                        // En modo picos, usa el pico de llamadas del periodo
                         let callsArray = [];
                         let reqArray = [];
                         let ahtArray = [];
                         fechasFiltradas.forEach(fStr => {
                             const subRows = mapIntervaloFecha[`${fStr}_${inter}`] || [];
-                            let sc = subRows.reduce((a, b) => a + (Number(getProp(b, ['Llamadas', 'Recibidas'], 0)) || 0), 0);
+                            let sc = subRows.reduce((a, b) => a + (Number(getProp(b, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0), 0);
                             let sr = subRows.reduce((a, b) => a + (Number(getProp(b, ['Agentes_Requeridos'], 0)) || 0), 0);
-                            let sht = subRows.reduce((a, b) => a + ((Number(getProp(b, ['Llamadas', 'Recibidas'], 0)) || 0) * (Number(getProp(b, ['AHT_Segundos'], 180)) || 180)), 0);
+                            let sht = subRows.reduce((a, b) => a + ((Number(getProp(b, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0) * (Number(getProp(b, ['AHT_Segundos'], 180)) || 180)), 0);
                             callsArray.push(sc);
                             reqArray.push(sr);
                             ahtArray.push(sc > 0 ? sht / sc : 180);
@@ -1070,7 +1440,6 @@
                         reqAvgVector[idx] = Math.max(...reqArray);
                         ahtAvgVector[idx] = Math.max(...ahtArray);
                     } else {
-                        // FIX: Promedio por día de la semana (ej. suma total del mes / ~4.2 semanas)
                         llamadasAvgVector[idx] = callsSum / numDiasPeriodo;
                         reqAvgVector[idx] = reqSum / numDiasPeriodo;
                         ahtAvgVector[idx] = callsSum > 0 ? (htSum / callsSum) : 180;
@@ -1078,19 +1447,22 @@
                 }
             });
 
-            document.getElementById('kpiAht').innerText = formatAHT(avgAhtSegs);
-
             try {
-                ejecutarOptimizadorHorarios(todosIntervalos, llamadasAvgVector, ahtAvgVector, rosterAvgVector, reqAvgVector, targetTimeObj, targetSlObj, mermaVal, durJornada, usarNocturno, esVistaSemanal, dfFiltered);
+                const concurrenciaVal = parseFloat(document.getElementById('concurrencia').value) || 3.0;
+                ejecutarOptimizadorHorarios(todosIntervalos, llamadasAvgVector, ahtAvgVector, rosterAvgVector, reqAvgVector, targetTimeObj, targetSlObj, mermaVal, durJornada, usarNocturno, esVistaSemanal, concurrenciaVal, dfFiltered);
             } catch (e) {
                 console.log("Error al preparar optimizador:", e);
             }
         }
 
-        async function ejecutarOptimizadorHorarios(intervalos, llamadasArr, ahtSegsArr, rosterAvgVector, reqAvgVector, targetTimeObj, targetSlObj, mermaVal, durJornada, usarNocturno, esVistaSemanal, dfFiltered) {
+        async function ejecutarOptimizadorHorarios(intervalos, llamadasArr, ahtSegsArr, rosterAvgVector, reqAvgVector, targetTimeObj, targetSlObj, mermaVal, durJornada, usarNocturno, esVistaSemanal, concurrenciaVal, dfFiltered) {
             if (!intervalos || intervalos.length === 0) return;
 
             try {
+                document.getElementById('contGapChart').classList.remove('hidden');
+                document.getElementById('contGeneralChart').classList.add('hidden');
+
+                const forceOutboundLogic = false;
                 const res = await fetch('/api/optimize-schedules', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1104,17 +1476,33 @@
                         target_time: targetTimeObj,
                         merma: mermaVal,
                         duracion_jornada: durJornada,
-                        es_nocturno: usarNocturno
+                        es_nocturno: usarNocturno,
+                        es_outbound: forceOutboundLogic,
+                        es_chat: forecastMode === 'chat',
+                        concurrencia: concurrenciaVal
                     })
                 });
 
                 if (!res.ok) throw new Error("Error procesando optimizador en backend");
-
                 const optData = await res.json() || {};
                 
                 const capacidadRosterVector = []; 
                 const capacidadSugeridaVector = []; 
                 
+                let legendInteractions = 'Llamadas (FCST)';
+                if (forecastMode === 'chat') legendInteractions = 'Mensajes (FCST)';
+                let capHeader = 'Capacidad SLA';
+
+                document.getElementById('tableHeaderRow').innerHTML = `
+                    <th class="py-3.5 px-4 text-left">Intervalo</th>
+                    <th class="py-3.5 px-4">${legendInteractions}</th>
+                    <th class="py-3.5 px-4">AHT (HH:MM:SS)</th>
+                    <th class="py-3.5 px-4 text-brand-primary">Req. (HC)</th>
+                    <th class="py-3.5 px-4 text-brand-accentEmerald">Avail. (HC)</th>
+                    <th class="py-3.5 px-4 text-brand-accentAmber">${capHeader}</th>
+                    <th class="py-3.5 px-4 text-center">Gap</th>
+                `;
+
                 const tbody = document.getElementById('intervalTableBody');
                 tbody.innerHTML = '';
 
@@ -1144,7 +1532,7 @@
                     tr.onclick = () => toggleTableInterval(inter);
                     tr.className = `cursor-pointer transition-all duration-200 hover:bg-[#1E293B]`;
                     tr.innerHTML = `
-                        <td class="py-2.5 px-4 font-bold text-slate-200 flex items-center gap-2">
+                        <td class="py-2.5 px-4 font-bold text-slate-200 flex items-center gap-2 text-left">
                             <span class="text-[10px] text-brand-accentCyan drop-shadow-[0_0_2px_rgba(34,211,238,0.8)]">●</span> ${inter}
                         </td>
                         <td class="py-2.5 px-4 text-slate-300 font-medium">${rowLlamadas.toLocaleString()}</td>
@@ -1189,7 +1577,7 @@
                                 pointHoverRadius: 6
                             },
                             { 
-                                label: 'Llamadas (FCST)', 
+                                label: legendInteractions, 
                                 data: llamadasArr.map(x => Math.round(x)), 
                                 backgroundColor: '#38BDF8',
                                 borderColor: 'transparent',
@@ -1214,25 +1602,22 @@
                     }
                 });
 
-                const uniqueCampaigns = [...new Set(dfFiltered.map(r => r.Campaña))];
+                const uniqueCampChannel = [...new Set(dfFiltered.map(r => r.Campaña + '|' + (r.Canal || '')))];
                 let totalRosterHC = 0;
                 
-                if (esVistaSemanal) {
-                    uniqueCampaigns.forEach(c => {
-                        const row = dfFiltered.find(r => r.Campaña === c);
-                        if (row) totalRosterHC += (row.Total_Roster_Campana || 0);
-                    });
-                } else {
-                    uniqueCampaigns.forEach(c => {
-                        const row = dfFiltered.find(r => r.Campaña === c);
-                        if (row) totalRosterHC += (row.Total_Roster_Dia || 0);
-                    });
-                }
+                uniqueCampChannel.forEach(cc => {
+                    const row = dfFiltered.find(r => (r.Campaña + '|' + (r.Canal || '')) === cc);
+                    if (row) {
+                        if (esVistaSemanal) totalRosterHC += (row.Total_Roster_Campana || 0);
+                        else totalRosterHC += (row.Total_Roster_Dia || 0);
+                    }
+                });
 
-                const nominaRequeridaTotalSemana = optData.headcount_semanal_6x1 || 0;
                 const nominaRequeridaDiaria = optData.total_agentes_diarios || 0;
+                const nominaRequeridaTotalSemana = optData.headcount_semanal_6x1 || 0;
                 const hcRequeridoDisplay = esVistaSemanal ? nominaRequeridaTotalSemana : nominaRequeridaDiaria;
                 
+                document.getElementById('kpiHcRequeridoTitle').innerText = "HC Requerido Total";
                 document.getElementById('kpiHcRequerido').innerText = hcRequeridoDisplay.toLocaleString() + ' HC';
                 document.getElementById('optHeadcount').innerText = hcRequeridoDisplay.toLocaleString();
                 
@@ -1264,8 +1649,70 @@
                 const slOptimoVal = parseFloat(optData.sl_optimo_global || 0);
                 const slEl = document.getElementById('compSlOptimo');
                 slEl.innerText = slOptimoVal.toFixed(1) + '%';
+                
                 if (slOptimoVal >= targetSlObj) slEl.className = "text-3xl font-black font-mono-num text-brand-accentEmerald drop-shadow-[0_0_8px_rgba(52,211,153,0.3)] block";
                 else slEl.className = "text-3xl font-black font-mono-num text-brand-accentRose drop-shadow-[0_0_8px_rgba(251,113,133,0.3)] block";
+
+                if (optChartInstance) optChartInstance.destroy();
+                const ctxOpt = document.getElementById('optChart').getContext('2d');
+                const labelCurvaCob = usarNocturno ? "Malla Sugerida (Mixta)" : `Malla Sugerida (${durJornada}h)`;
+
+                optChartInstance = new Chart(ctxOpt, {
+                    type: 'line',
+                    data: {
+                        labels: intervalos,
+                        datasets: [
+                            { 
+                                label: 'HC Requerido (Motor)', 
+                                data: reqAvgVector, 
+                                borderColor: '#22D3EE', 
+                                backgroundColor: 'rgba(34, 211, 238, 0.1)', 
+                                fill: true, 
+                                tension: 0.4, 
+                                borderWidth: 3,
+                                pointRadius: 0,
+                                pointHoverRadius: 6
+                            },
+                            { 
+                                label: 'Plantilla Actual (Roster)', 
+                                data: rosterAvgVector, 
+                                borderColor: '#34D399', 
+                                backgroundColor: '#34D399', 
+                                fill: false, 
+                                tension: 0.4, 
+                                borderWidth: 2, 
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                pointHoverRadius: 6
+                            },
+                            { 
+                                label: labelCurvaCob, 
+                                data: (optData.cobertura_optima || []), 
+                                borderColor: '#3B82F6', 
+                                backgroundColor: '#3B82F6', 
+                                fill: false, 
+                                tension: 0.4, 
+                                borderWidth: 3, 
+                                borderDash: [4, 4],
+                                pointRadius: 0,
+                                pointHoverRadius: 6
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { 
+                            legend: { labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 11, weight: 600 }, usePointStyle: true, boxWidth: 8 } },
+                            tooltip: { backgroundColor: '#111827', titleColor: '#F8FAFC', bodyColor: '#cbd5e1', borderColor: '#1F2937', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true }
+                        }, 
+                        scales: { 
+                            x: { grid: { display: false }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 12 } }, 
+                            y: { grid: { color: '#1F2937', borderDash: [4, 4] }, ticks: { precision: 0, color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } }, beginAtZero: true } 
+                        } 
+                    }
+                });
 
                 const optTbody = document.getElementById('optShiftsTableBody');
                 optTbody.innerHTML = '';
@@ -1344,67 +1791,6 @@
                     });
                 }
 
-                if (optChartInstance) optChartInstance.destroy();
-                const ctxOpt = document.getElementById('optChart').getContext('2d');
-                const labelCurvaCob = usarNocturno ? "Malla Sugerida (Mixta)" : `Malla Sugerida (${durJornada}h)`;
-
-                optChartInstance = new Chart(ctxOpt, {
-                    type: 'line',
-                    data: {
-                        labels: intervalos,
-                        datasets: [
-                            { 
-                                label: 'HC Requerido (Motor)', 
-                                data: reqAvgVector, 
-                                borderColor: '#22D3EE', 
-                                backgroundColor: 'rgba(34, 211, 238, 0.1)', 
-                                fill: true, 
-                                tension: 0.4, 
-                                borderWidth: 3,
-                                pointRadius: 0,
-                                pointHoverRadius: 6
-                            },
-                            { 
-                                label: 'Plantilla Actual (Roster)', 
-                                data: rosterAvgVector, 
-                                borderColor: '#34D399', 
-                                backgroundColor: '#34D399', 
-                                fill: false, 
-                                tension: 0.4, 
-                                borderWidth: 2, 
-                                borderDash: [5, 5],
-                                pointRadius: 0,
-                                pointHoverRadius: 6
-                            },
-                            { 
-                                label: labelCurvaCob, 
-                                data: (optData.cobertura_optima || []), 
-                                borderColor: '#3B82F6', 
-                                backgroundColor: '#3B82F6', 
-                                fill: false, 
-                                tension: 0.4, 
-                                borderWidth: 3, 
-                                borderDash: [4, 4],
-                                pointRadius: 0,
-                                pointHoverRadius: 6
-                            }
-                        ]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: { 
-                            legend: { labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 11, weight: 600 }, usePointStyle: true, boxWidth: 8 } },
-                            tooltip: { backgroundColor: '#111827', titleColor: '#F8FAFC', bodyColor: '#cbd5e1', borderColor: '#1F2937', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true }
-                        }, 
-                        scales: { 
-                            x: { grid: { display: false }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 12 } }, 
-                            y: { grid: { color: '#1F2937', borderDash: [4, 4] }, ticks: { precision: 0, color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } }, beginAtZero: true } 
-                        } 
-                    }
-                });
-
             } catch (e) {
                 console.log("Error al optimizar turnos en frontend:", e);
                 document.getElementById('compSlOptimo').innerText = "Error";
@@ -1474,16 +1860,17 @@
                 alert("No hay datos cargados para exportar.");
                 return;
             }
-            const headers = ["Campana", "Mes", "Fecha", "Dia_Semana", "Intervalo", "Llamadas", "AHT_HH_MM_SS", "Agentes_Requeridos_HC", "HC_Actual_Roster", "Factor_Reforecast"];
+            const headers = ["Campana", "Canal", "Mes", "Fecha", "Dia_Semana", "Intervalo", "Volumen", "AHT_HH_MM_SS", "Agentes_Requeridos_HC", "HC_Actual_Roster", "Factor_Reforecast"];
             const csvRows = [headers.join(",")];
             globalData.forEach(row => {
                 const values = [
                     getProp(row, ['Campaña', 'Campana'], 'General'),
+                    getProp(row, ['Canal'], 'N/A'),
                     getProp(row, ['Mes'], ''),
                     getProp(row, ['Fecha'], ''),
                     getProp(row, ['Día_Semana', 'Dia_Semana'], ''),
                     getProp(row, ['Intervalo'], '00:00'),
-                    getProp(row, ['Llamadas', 'Recibidas'], 0),
+                    getProp(row, ['Llamadas', 'Recibidas', 'Recibidos'], 0),
                     formatAHT(getProp(row, ['AHT_Segundos'], 180)),
                     getProp(row, ['Agentes_Requeridos'], 0),
                     getProp(row, ['HC_Actual_Roster'], 0),
