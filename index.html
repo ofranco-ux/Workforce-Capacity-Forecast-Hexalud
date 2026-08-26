@@ -773,9 +773,7 @@
         function maxCallsForAgents(agentsNetos, aht, targetTime, targetSl) {
             if (agentsNetos <= 0 || aht <= 0) return 0;
             
-            if (forecastMode === 'general') {
-                return Math.floor(agentsNetos * (1800 / aht));
-            } else if (forecastMode === 'chat') {
+            if (forecastMode === 'chat') {
                 const concurrencia = parseFloat(document.getElementById('concurrencia').value) || 3.0;
                 let low = 0;
                 let high = agentsNetos * (1800 / aht) * concurrencia * 5; 
