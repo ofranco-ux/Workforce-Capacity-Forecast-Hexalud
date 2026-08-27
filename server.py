@@ -728,7 +728,14 @@ def resolver_turnos_optimos(intervalos, campanas_activas, llamadas_vec=None, aht
     SHIFT_BLOCKS = int(round(float(duracion_jornada) * 2))
     label_jornada_diurna = f"{float(duracion_jornada):.1f} hrs".replace('.0', '')
 
-    valid_starts = [j for j in range(m) if parse_time_str(intervalos[j]) is not None]
+    valid_starts = []
+    for j in range(m):
+        min_in = parse_time_str(intervalos[j])
+        if min_in is not None:
+            # Regla de negocio: El turno debe iniciar a las 07:00 o después, 
+            # y terminar exactamente a las 22:00 o antes.
+            if min_in >= (7 * 60) and (min_in + duracion_minutos) <= (22 * 60):
+                valid_starts.append(j)
 
     def calc_current_global_sl(current_cob):
         if tot_llamadas <= 0: return 100.0
