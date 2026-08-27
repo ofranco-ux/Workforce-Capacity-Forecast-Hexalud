@@ -1736,8 +1736,18 @@
                 if (globalTurnosOptimos.length === 0) {
                     optTbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-500 font-sans font-medium">No se requieren agentes dentro de la ventana de servicio.</td></tr>';
                 } else {
-                    let offsetDiurno = 0;
-                    let offsetNocturno = 0;
+                    // --- NUEVO ALGORITMO: Asignación de descansos basada en Demanda Real ---
+                    let demandaPorDia = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]; // Evitar división por cero
+                    let diasMap = { 'lunes': 0, 'martes': 1, 'miércoles': 2, 'miercoles': 2, 'jueves': 3, 'viernes': 4, 'sábado': 5, 'sabado': 5, 'domingo': 6 };
+
+                    // 1. Mapeamos el volumen total por cada día de la semana
+                    dfFiltered.forEach(r => {
+                        let diaStr = String(getProp(r, ['Día_Semana', 'Dia_Semana'], '')).toLowerCase().trim();
+                        let idx = diasMap[diaStr];
+                        if (idx !== undefined) {
+                            demandaPorDia[idx] += Number(getProp(r, ['Llamadas', 'Recibidas', 'Recibidos'], 0)) || 0;
+                        }
+                    });
 
                     globalTurnosOptimos.forEach(t => {
                         const hcTurno = t.nomina_a_contratar;
@@ -1746,20 +1756,48 @@
                         const shiftStr = `${t.horario_entrada} - ${t.horario_salida}`;
                         const esTurnoNocturno = t.duracion.includes('Nocturno');
 
-                        let distribucion = [0, 0, 0, 0, 0, 0, 0];
+                        // 2. Evaluamos la sobrecapacidad para asignar días libres
+                        let descansosAsignados = [0, 0, 0, 0, 0, 0, 0];
+                        let capacidadActiva = [hcTurno, hcTurno, hcTurno, hcTurno, hcTurno, hcTurno, hcTurno];
                         
                         for (let i = 0; i < hcTurno; i++) {
                             if (esTurnoNocturno) {
-                                distribucion[offsetNocturno % 7]++;
-                                offsetNocturno++;
+                                // Lógica Nocturna 5x2: Buscar el mejor par de días consecutivos con menor demanda
+                                let maxExcess = -Infinity;
+                                let bestPair = 0;
+                                for (let p = 0; p < 7; p++) {
+                                    let d1 = p, d2 = (p + 1) % 7;
+                                    let excess = (capacidadActiva[d1] / demandaPorDia[d1]) + (capacidadActiva[d2] / demandaPorDia[d2]);
+                                    if (excess > maxExcess) {
+                                        maxExcess = excess;
+                                        bestPair = p;
+                                    }
+                                }
+                                descansosAsignados[bestPair]++;
+                                capacidadActiva[bestPair]--;
+                                capacidadActiva[(bestPair + 1) % 7]--;
                             } else {
-                                distribucion[offsetDiurno % 7]++;
-                                offsetDiurno++;
+                                // Lógica Diurna 6x1: Buscar el día individual con menor demanda
+                                let maxExcess = -Infinity;
+                                let bestDay = 0;
+                                for (let d = 0; d < 7; d++) {
+                                    let excess = capacidadActiva[d] / demandaPorDia[d];
+                                    if (excess > maxExcess) {
+                                        maxExcess = excess;
+                                        bestDay = d;
+                                    }
+                                }
+                                descansosAsignados[bestDay]++;
+                                capacidadActiva[bestDay]--;
                             }
                         }
 
+                        // Guardamos la distribución inteligente para usarla en el CSV luego
+                        t.descansosDistribuidos = descansosAsignados;
+
+                        // 3. Renderizar la tabla con la lógica inteligente
                         for (let i = 0; i < 7; i++) {
-                            const hcDescanso = distribucion[i];
+                            const hcDescanso = descansosAsignados[i];
                             if (hcDescanso > 0) {
                                 const tr = document.createElement('tr');
                                 tr.className = 'hover:bg-[#1E293B] transition-colors';
@@ -1787,6 +1825,7 @@
                             }
                         }
                     });
+                    // --- FIN DEL NUEVO ALGORITMO ---
                 }
 
             } catch (e) {
@@ -1805,35 +1844,24 @@
             const headers = ["HC", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
             const csvRows = [headers.join(",")];
             
-            let offsetDiurno = 0;
-            let offsetNocturno = 0;
-
+            // --- NUEVA EXPORTACIÓN INTELIGENTE ---
             globalTurnosOptimos.forEach(t => {
                 const hcTurno = t.nomina_a_contratar;
                 if (hcTurno <= 0) return;
                 
                 const shiftStr = `${t.horario_entrada} - ${t.horario_salida}`;
                 const esTurnoNocturno = t.duracion.includes('Nocturno');
+                
+                // Leemos la distribución inteligente que calculó la función de la tabla
+                const descansosAsignados = t.descansosDistribuidos || [0,0,0,0,0,0,0];
 
-                let distribucion = [0, 0, 0, 0, 0, 0, 0];
-                
-                for (let i = 0; i < hcTurno; i++) {
-                    if (esTurnoNocturno) {
-                        distribucion[offsetNocturno % 7]++;
-                        offsetNocturno++;
-                    } else {
-                        distribucion[offsetDiurno % 7]++;
-                        offsetDiurno++;
-                    }
-                }
-                
                 for (let i = 0; i < 7; i++) {
-                    const hcDescanso = distribucion[i];
+                    const hcDescanso = descansosAsignados[i];
                     if (hcDescanso > 0) {
                         let row = [hcDescanso];
                         for (let d = 0; d < 7; d++) {
                             if (esTurnoNocturno) {
-                                if (d === i || d === (i+1)%7) row.push("Descanso");
+                                if (d === i || d === (i + 1) % 7) row.push("Descanso");
                                 else row.push(shiftStr);
                             } else {
                                 if (d === i) row.push("Descanso");
@@ -1844,6 +1872,7 @@
                     }
                 }
             });
+            // --- FIN EXPORTACIÓN INTELIGENTE ---
 
             const blob = new Blob([csvRows.join(String.fromCharCode(10))], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
