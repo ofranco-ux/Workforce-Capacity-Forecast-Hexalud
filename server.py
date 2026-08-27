@@ -196,6 +196,7 @@ def procesar_hoja_roster(df_roster):
                 'jueves': 'Jueves', 'viernes': 'Viernes', 'sábado': 'Sábado', 'sabado': 'Sábado', 'domingo': 'Domingo'}
     roster_cov, roster_total_camp, roster_total_dia_camp = {}, {}, {}
     col_camp = encontrar_columna(df_roster, ['campaña', 'campana', 'skill', 'servicio'])
+    
     col_agente = encontrar_columna(df_roster, ['agente', 'nombre', 'asesor', 'ejecutivo', 'id'])
     
     if not col_camp: return roster_cov, roster_total_camp, roster_total_dia_camp
@@ -232,9 +233,24 @@ def procesar_hoja_roster(df_roster):
 # ==============================================================
 def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=0.20, dias_futuros=45):
     xls_file = pd.ExcelFile(file_source, engine='openpyxl')
-    sheet_calls = xls_file.sheet_names[0]
+    
+    # 🛑 FIX: Búsqueda estricta para Inbound (Ignora Chat y Outbound)
+    sheet_calls = None
     for s in xls_file.sheet_names:
-        if 'llam' in s.lower() or 'hist' in s.lower() or 'datos' in s.lower(): sheet_calls = s; break
+        s_low = s.lower()
+        if ('llam' in s_low or 'hist' in s_low or 'datos' in s_low or 'inbound' in s_low) and 'chat' not in s_low and 'mensaje' not in s_low and 'plantilla' not in s_low and 'roster' not in s_low and 'platilla' not in s_low and 'out' not in s_low and 'salida' not in s_low:
+            sheet_calls = s
+            break
+            
+    if not sheet_calls:
+        for s in xls_file.sheet_names:
+            s_low = s.lower()
+            if 'chat' not in s_low and 'mensaje' not in s_low and 'plantilla' not in s_low and 'roster' not in s_low and 'platilla' not in s_low and 'out' not in s_low and 'salida' not in s_low:
+                sheet_calls = s
+                break
+                
+    if not sheet_calls:
+        sheet_calls = xls_file.sheet_names[0]
             
     sheet_roster = None
     for s in xls_file.sheet_names:
@@ -443,7 +459,7 @@ def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=
 
 
 # ==============================================================
-# PROCESAR CHAT (NUEVO)
+# PROCESAR CHAT
 # ==============================================================
 def procesar_archivo_chat(file_source, target_sl=80.0, target_time=20.0, merma=0.20, concurrencia=3.0, dias_futuros=45):
     xls_file = pd.ExcelFile(file_source, engine='openpyxl')
