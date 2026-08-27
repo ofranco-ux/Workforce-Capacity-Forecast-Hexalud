@@ -196,7 +196,6 @@ def procesar_hoja_roster(df_roster):
                 'jueves': 'Jueves', 'viernes': 'Viernes', 'sábado': 'Sábado', 'sabado': 'Sábado', 'domingo': 'Domingo'}
     roster_cov, roster_total_camp, roster_total_dia_camp = {}, {}, {}
     col_camp = encontrar_columna(df_roster, ['campaña', 'campana', 'skill', 'servicio'])
-    
     col_agente = encontrar_columna(df_roster, ['agente', 'nombre', 'asesor', 'ejecutivo', 'id'])
     
     if not col_camp: return roster_cov, roster_total_camp, roster_total_dia_camp
@@ -234,7 +233,6 @@ def procesar_hoja_roster(df_roster):
 def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=0.20, dias_futuros=45):
     xls_file = pd.ExcelFile(file_source, engine='openpyxl')
     
-    # 🛑 FIX: Búsqueda estricta para Inbound (Ignora Chat y Outbound)
     sheet_calls = None
     for s in xls_file.sheet_names:
         s_low = s.lower()
@@ -429,7 +427,7 @@ def procesar_archivo_excel(file_source, target_sl=80.0, target_time=20.0, merma=
 
                 a_erlang = (calls_float * aht) / 1800.0 if (aht > 0 and calls_float > 0) else 0.0
                 req_ftes = calcular_agentes_requeridos_erlang_c(a_erlang, aht, target_time, target_sl) if calls_float > 0 else 0
-                req_hc = math.ceil(req_ftes / factor_asistencia) if req_ftes > 0 else 0
+                req_hc = req_ftes / factor_asistencia if req_ftes > 0 else 0.0
                 
                 mapped_camp = get_mapped_camp(camp)
                 hc_roster = roster_coverage.get((mapped_camp, nombre_dia.capitalize(), inter), 0)
@@ -684,7 +682,9 @@ def resolver_turnos_optimos(intervalos, campanas_activas, llamadas_vec=None, aht
     try:
         llamadas_arr = np.array([float(x) if (x is not None and str(x).lower() != 'nan') else 0.0 for x in llamadas_vec], dtype=float)
         aht_arr = np.array([float(x) if (x is not None and str(x).lower() != 'nan') else 180.0 for x in aht_vec], dtype=float)
-        req_hc_base = np.array([int(x) if (x is not None and str(x).lower() != 'nan') else 0 for x in req_vec], dtype=float)
+        
+        # 🛑 FIX CRITICO: Redondeo hacia arriba (ceil) en lugar de trunco (int)
+        req_hc_base = np.array([math.ceil(float(x)) if (x is not None and str(x).lower() != 'nan') else 0.0 for x in req_vec], dtype=float)
     except:
         llamadas_arr = np.zeros(m)
         aht_arr = np.full(m, 180.0)
