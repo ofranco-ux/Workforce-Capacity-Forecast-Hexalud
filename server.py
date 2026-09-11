@@ -151,8 +151,8 @@ def pronosticar_con_machine_learning(df_diario_campana, dias_futuros, fecha_inic
     modelo = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=5, min_samples_leaf=2)
     modelo.fit(df_train[features], df_train['ratio_smooth'])
     
-    # FIX: Congelamos el baseline usando tus últimos 21 días reales
-    ultimos_reales = df_train['calls_clean'].tail(21)
+    # FIX: Congelamos el baseline usando tus últimos 60 días reales
+    ultimos_reales = df_train['calls_clean'].tail(60)
     fixed_baseline = ultimos_reales.mean() if not ultimos_reales.empty else df_train['calls_clean'].mean()
     
     preds_finales = []
