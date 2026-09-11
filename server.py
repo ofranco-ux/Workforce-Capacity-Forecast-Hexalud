@@ -58,7 +58,6 @@ VENTANAS_SERVICIO = {
 def forzar_cuadre_dashboard(df_final):
     if df_final.empty: return df_final
     
-    # 1. HACK MENSUAL (Garantiza que el mes cuadre con la suma pura dedicada)
     for mes in df_final['Mes'].unique():
         df_mes = df_final[df_final['Mes'] == mes]
         
@@ -76,7 +75,6 @@ def forzar_cuadre_dashboard(df_final):
             if len(idx) > 0:
                 df_final.loc[idx[0], 'Agentes_Requeridos'] += diferencia
 
-    # 2. HACK DIARIO (Garantiza el mismo cuadre si se filtra por un solo día)
     for fecha in df_final['Fecha'].unique():
         df_dia = df_final[df_final['Fecha'] == fecha]
         
@@ -153,14 +151,14 @@ def pronosticar_con_machine_learning(df_diario_campana, dias_futuros, fecha_inic
     modelo = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=5, min_samples_leaf=2)
     modelo.fit(df_train[features], df_train['ratio_smooth'])
     
-    historial_simulado = df_ml.to_dict('records')
+    # FIX: Congelamos el baseline usando tus últimos 21 días reales
+    ultimos_reales = df_train['calls_clean'].tail(21)
+    fixed_baseline = ultimos_reales.mean() if not ultimos_reales.empty else df_train['calls_clean'].mean()
+    
     preds_finales = []
     fecha_actual = fecha_inicio_forecast
     
     for d in range(dias_futuros):
-        ultimas_llamadas = [r.get('calls_clean', r.get(col_calls, 0)) for r in historial_simulado]
-        current_baseline = np.mean(ultimas_llamadas[-10:]) if len(ultimas_llamadas) >= 10 else np.mean(ultimas_llamadas)
-        
         X_pred = pd.DataFrame([{
             'dia_semana': fecha_actual.weekday(),
             'es_inicio_mes': 1 if fecha_actual.day <= 5 else 0,
@@ -169,14 +167,9 @@ def pronosticar_con_machine_learning(df_diario_campana, dias_futuros, fecha_inic
         }])
         
         pred_ratio = float(modelo.predict(X_pred[features])[0])
-        pred_vol = max(0.0, float(current_baseline * pred_ratio))
+        pred_vol = max(0.0, float(fixed_baseline * pred_ratio))
         preds_finales.append(pred_vol)
         
-        historial_simulado.append({
-            col_fecha: fecha_actual,
-            col_calls: pred_vol,
-            'calls_clean': pred_vol
-        })
         fecha_actual += timedelta(days=1)
         
     return preds_finales
