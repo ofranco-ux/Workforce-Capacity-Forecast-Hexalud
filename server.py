@@ -31,7 +31,8 @@ from sklearn.ensemble import RandomForestRegressor
 CACHE_FILE_LLAMADAS = os.path.join(BASE_DIR, 'forecast_cache_llamadas.json')
 CACHE_FILE_CHAT = os.path.join(BASE_DIR, 'forecast_cache_chat.json')
 CONFIG_FILE = os.path.join(BASE_DIR, 'wfm_config.json') 
-EXCEL_DEFAULT = os.path.join(BASE_DIR, 'historico.xlsx')
+EXCEL_FILENAME = os.environ.get('WFM_EXCEL_FILE', 'Data Real Hexalud.xlsx')
+EXCEL_DEFAULT = os.path.join(BASE_DIR, EXCEL_FILENAME)
 WFM_ACTION_LOG_FILE = os.path.join(BASE_DIR, 'wfm_action_log.json')
 WFM_ROSTER_DB = os.path.join(BASE_DIR, 'wfm_roster.db')
 WFM_TIMEZONE = os.environ.get('WFM_TIMEZONE','America/Mexico_City')
@@ -335,14 +336,46 @@ def pronosticar_con_machine_learning(df_diario_campana, dias_futuros, fecha_inic
     return preds_finales
 
 def buscar_archivo_excel():
+    """Localiza el archivo fuente del forecast.
+
+    Prioridad:
+    1) WFM_EXCEL_FILE (por defecto: Data Real Hexalud.xlsx).
+    2) Coincidencia por nombre "Data Real Hexalud".
+    3) Compatibilidad con nombres anteriores (data / servicios / historico).
+    4) Primer Excel disponible como último recurso.
+    """
     try:
-        archivos = [f for f in os.listdir(BASE_DIR) if f.lower().endswith('.xlsx') and not f.startswith('~')]
-        if not archivos: return None
+        # Ruta configurada explícitamente / nombre oficial actual.
+        if os.path.isfile(EXCEL_DEFAULT):
+            return EXCEL_DEFAULT
+
+        archivos = [
+            f for f in os.listdir(BASE_DIR)
+            if f.lower().endswith(('.xlsx', '.xlsm')) and not f.startswith('~')
+        ]
+        if not archivos:
+            return None
+
+        # La comparación case-insensitive permite variaciones de mayúsculas/minúsculas.
+        objetivo = os.path.splitext(os.path.basename(EXCEL_FILENAME))[0].strip().lower()
         for f in archivos:
-            if 'data' in f.lower() or 'servicios' in f.lower() or 'historico' in f.lower(): 
+            base = os.path.splitext(f)[0].strip().lower()
+            if base == objetivo or base == 'data real hexalud':
                 return os.path.join(BASE_DIR, f)
+
+        # Respaldo para instalaciones que todavía conserven el nombre anterior.
+        for f in archivos:
+            nombre = f.lower()
+            if 'data real hexalud' in nombre:
+                return os.path.join(BASE_DIR, f)
+        for f in archivos:
+            nombre = f.lower()
+            if 'data' in nombre or 'servicios' in nombre or 'historico' in nombre:
+                return os.path.join(BASE_DIR, f)
+
         return os.path.join(BASE_DIR, archivos[0])
-    except: return None
+    except Exception:
+        return None
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -1157,7 +1190,7 @@ def _forecast_generate_raw(channel):
     mode = _forecast_channel_norm(channel)
     excel_path = buscar_archivo_excel()
     if not excel_path:
-        raise ValueError('No se encontró historico.xlsx para recalcular el forecast.')
+        raise ValueError(f'No se encontró {EXCEL_FILENAME} para recalcular el forecast.')
 
     sl, tt, merma, dias, concurrencia = 80.0, 20.0, 30.0, 130, 3.0
     campaign_settings = {}
